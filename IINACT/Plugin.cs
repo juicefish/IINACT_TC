@@ -73,9 +73,11 @@ public sealed class Plugin : IDalamudPlugin
         NotificationManager = notificationManager;
         Log = pluginLog;
 
-        OpcodeManager.Instance.SetRegion(DataManager.Language.ToString() == "ChineseSimplified"
-                                             ? GameRegion.Chinese
-                                             : GameRegion.Global);
+        //Log.Information($"DataManager.Language.ToString() ==  : {DataManager.Language.ToString()}");
+        //DataManager.Language.ToString() == "ChineseSimplified", force to ChineseTraditional
+        ClientLanguage clientLanguage = ClientLanguage.ChineseTraditional;
+        GameRegion gameRegion = GameRegion.TraditionalChinese;
+        OpcodeManager.Instance.SetRegion(gameRegion);
 
         var createZoneDownHookManager = Task.Run(() 
             => new ZoneDownHookManager(NotificationManager, GameInteropProvider));
@@ -85,9 +87,10 @@ public sealed class Plugin : IDalamudPlugin
 
         HttpClient = new HttpClient();
         
+        // Act 3.0.1.8 intgretion TC in major dll
         var fetchDeps =
             new FetchDependencies.FetchDependencies(Version, PluginInterface.AssemblyLocation.Directory!.FullName,
-                                                    DataManager.Language.ToString() == "ChineseSimplified", HttpClient);
+                                                    false, HttpClient);
         
         fetchDeps.GetFfxivPlugin();
         
@@ -103,7 +106,7 @@ public sealed class Plugin : IDalamudPlugin
         this.TextToSpeechProvider = new TextToSpeechProvider();
         Advanced_Combat_Tracker.ActGlobals.oFormActMain.LogFilePath = Configuration.LogFilePath;
 
-        FfxivActPluginWrapper = new FfxivActPluginWrapper(Configuration, DataManager.Language, ChatGui, Framework, Condition);
+        FfxivActPluginWrapper = new FfxivActPluginWrapper(Configuration, clientLanguage, ChatGui, Framework, Condition);
         OverlayPlugin = InitOverlayPlugin();
 
         IpcProviders = new IpcProviders(PluginInterface);

@@ -164,7 +164,7 @@ public partial class FfxivActPluginWrapper : IDisposable
         DataCollectionSettings = new DataCollectionSettingsEventArgs
         {
             LogFileFolder = ActGlobals.oFormActMain.LogFilePath,
-            RegionID = Region.Global,
+            RegionID = Region.TraditionalChinese,
             ProcessID = Environment.ProcessId
         };
         settingsMediator.DataCollectionSettings = DataCollectionSettings;
@@ -173,7 +173,7 @@ public partial class FfxivActPluginWrapper : IDisposable
         {
             DisableDamageShield = configuration.DisableDamageShield,
             DisableCombinePets = configuration.DisableCombinePets,
-            LanguageID = ClientLanguage,
+            LanguageID = Language.TraditionalChinese,
             ParseFilter = (ParseFilterMode)configuration.ParseFilterMode,
             SimulateIndividualDoTCrits = configuration.SimulateIndividualDoTCrits,
             ShowRealDoTTicks = configuration.ShowRealDoTTicks,
