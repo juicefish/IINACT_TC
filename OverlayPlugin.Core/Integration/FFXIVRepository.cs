@@ -328,6 +328,8 @@ namespace RainbowMage.OverlayPlugin
                     return "cn";
                 case Language.Korean:
                     return "ko";
+                case Language.TraditionalChinese:
+                    return "tc";
                 default:
                     return null;
             }

@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using RainbowMage.OverlayPlugin.MemoryProcessors;
 using RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper;
 
@@ -6,6 +6,7 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors
 {
     class LineCountdownCancel : LineBaseCustom<
             Server_MessageHeader_Global, LineCountdownCancel.CountdownCancel_v730,
+            Server_MessageHeader_TC, LineCountdownCancel.CountdownCancel_v655,
             Server_MessageHeader_CN, LineCountdownCancel.CountdownCancel_v655,
             Server_MessageHeader_KR, LineCountdownCancel.CountdownCancel_v655>
     {

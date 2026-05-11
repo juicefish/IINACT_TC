@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
@@ -10,6 +10,7 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
     internal static class MachinaMap
     {
         public static readonly Type HeaderType_Global;
+        public static readonly Type HeaderType_TC;
         public static readonly Type HeaderType_CN;
         public static readonly Type HeaderType_KR;
 
@@ -20,6 +21,7 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
             var machina = Assembly.Load("Machina.FFXIV");
             var allMachinaTypes = machina.GetTypes();
             var globalDict = new Dictionary<string, Type>();
+            var tcDict = new Dictionary<string, Type>();
             var chineseDict = new Dictionary<string, Type>();
             var koreanDict = new Dictionary<string, Type>();
 
@@ -47,6 +49,9 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
                     case "Machina.FFXIV.Headers":
                         globalDict.Add(mType.Name, mType);
                         break;
+                    case "Machina.FFXIV.Headers.TraditionalChinese":
+                        tcDict.Add(mType.Name, mType);
+                        break;
                     case "Machina.FFXIV.Headers.Chinese":
                         chineseDict.Add(mType.Name, mType);
                         break;
@@ -57,6 +62,7 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
 
                 packetTypeMap = new ReadOnlyDictionary<GameRegion, ReadOnlyDictionary<string, Type>>(new Dictionary<GameRegion, ReadOnlyDictionary<string, Type>>() {
                     { GameRegion.Global, new ReadOnlyDictionary<string, Type>(globalDict) },
+                    { GameRegion.TraditionalChinese, new ReadOnlyDictionary<string, Type>(tcDict) },
                     { GameRegion.Chinese, new ReadOnlyDictionary<string, Type>(chineseDict) },
                     { GameRegion.Korean, new ReadOnlyDictionary<string, Type>(koreanDict) },
                 });
@@ -67,6 +73,8 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
             // Currently Machina uses the same message header for all regions. Allow for that to change in the future.
             HeaderType_Global = machina.GetType("Machina.FFXIV.Headers.Server_MessageHeader");
             MachinaHeaderWrapper.InitTypePropertyMap(HeaderType_Global);
+            HeaderType_TC = machina.GetType("Machina.FFXIV.Headers.Server_MessageHeader");
+            MachinaHeaderWrapper.InitTypePropertyMap(HeaderType_TC);
             HeaderType_CN = machina.GetType("Machina.FFXIV.Headers.Server_MessageHeader");
             MachinaHeaderWrapper.InitTypePropertyMap(HeaderType_CN);
             HeaderType_KR = machina.GetType("Machina.FFXIV.Headers.Server_MessageHeader");
@@ -94,12 +102,14 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
         where PacketType : MachinaPacketWrapper, new()
     {
         public readonly MachinaPacketHelper<PacketType> global;
+        public readonly MachinaPacketHelper<PacketType> tc;
         public readonly MachinaPacketHelper<PacketType> cn;
         public readonly MachinaPacketHelper<PacketType> kr;
 
-        private MachinaRegionalizedPacketHelper(MachinaPacketHelper<PacketType> global, MachinaPacketHelper<PacketType> cn, MachinaPacketHelper<PacketType> kr)
+        private MachinaRegionalizedPacketHelper(MachinaPacketHelper<PacketType> global, MachinaPacketHelper<PacketType> tc, MachinaPacketHelper<PacketType> cn, MachinaPacketHelper<PacketType> kr)
         {
             this.global = global;
+            this.tc = tc;
             this.cn = cn;
             this.kr = kr;
         }
@@ -118,6 +128,10 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
             {
                 return false;
             }
+            if (!opcodes.TryGetValue(GameRegion.TraditionalChinese, out var tcOpcodes))
+            {
+                return false;
+            }
             if (!opcodes.TryGetValue(GameRegion.Chinese, out var cnOpcodes))
             {
                 return false;
@@ -128,6 +142,10 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
             }
 
             if (!MachinaMap.GetPacketType(GameRegion.Global, packetTypeName, out var globalPacketType))
+            {
+                return false;
+            }
+            if (!MachinaMap.GetPacketType(GameRegion.TraditionalChinese, packetTypeName, out var tcPacketType))
             {
                 return false;
             }
@@ -144,6 +162,10 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
             {
                 globalOpcode = 0;
             }
+            if (!tcOpcodes.TryGetValue(packetOpcodeName, out var tcOpcode))
+            {
+                tcOpcode = 0;
+            }
             if (!cnOpcodes.TryGetValue(packetOpcodeName, out var cnOpcode))
             {
                 cnOpcode = 0;
@@ -154,10 +176,11 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
             }
 
             var global = new MachinaPacketHelper<PacketType>(globalOpcode, MachinaMap.HeaderType_Global, globalPacketType);
+            var tc = new MachinaPacketHelper<PacketType>(tcOpcode, MachinaMap.HeaderType_TC, tcPacketType);
             var cn = new MachinaPacketHelper<PacketType>(cnOpcode, MachinaMap.HeaderType_CN, cnPacketType);
             var kr = new MachinaPacketHelper<PacketType>(krOpcode, MachinaMap.HeaderType_KR, krPacketType);
 
-            packetHelper = new MachinaRegionalizedPacketHelper<PacketType>(global, cn, kr);
+            packetHelper = new MachinaRegionalizedPacketHelper<PacketType>(global, tc, cn, kr);
 
             return true;
         }
@@ -169,6 +192,7 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper
                 switch (gameRegion)
                 {
                     case GameRegion.Global: return global;
+                    case GameRegion.TraditionalChinese: return tc;
                     case GameRegion.Chinese: return cn;
                     case GameRegion.Korean: return kr;
 

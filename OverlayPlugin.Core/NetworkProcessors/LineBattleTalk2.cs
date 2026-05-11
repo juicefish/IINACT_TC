@@ -1,10 +1,11 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper;
 
 namespace RainbowMage.OverlayPlugin.NetworkProcessors
 {
     class LineBattleTalk2 : LineBaseCustom<
             Server_MessageHeader_Global, LineBattleTalk2.BattleTalk2_v655,
+            Server_MessageHeader_TC, LineBattleTalk2.BattleTalk2_v655,
             Server_MessageHeader_CN, LineBattleTalk2.BattleTalk2_v655,
             Server_MessageHeader_KR, LineBattleTalk2.BattleTalk2_v655>
     {

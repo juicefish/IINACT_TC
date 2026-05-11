@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using RainbowMage.OverlayPlugin.MemoryProcessors;
 using RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper;
@@ -7,6 +7,7 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors
 {
     class LineRSV : LineBaseCustom<
             Server_MessageHeader_Global, LineRSV.RSV_v62,
+            Server_MessageHeader_TC, LineRSV.RSV_v62,
             Server_MessageHeader_CN, LineRSV.RSV_v62,
             Server_MessageHeader_KR, LineRSV.RSV_v62>
     {

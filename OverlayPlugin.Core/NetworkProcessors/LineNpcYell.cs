@@ -1,10 +1,11 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper;
 
 namespace RainbowMage.OverlayPlugin.NetworkProcessors
 {
     class LineNpcYell : LineBaseCustom<
             Server_MessageHeader_Global, LineNpcYell.NpcYell_v655,
+            Server_MessageHeader_TC, LineNpcYell.NpcYell_v655,
             Server_MessageHeader_CN, LineNpcYell.NpcYell_v655,
             Server_MessageHeader_KR, LineNpcYell.NpcYell_v655>
     {

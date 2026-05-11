@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using RainbowMage.OverlayPlugin.NetworkProcessors.PacketHelper;
 
@@ -6,6 +6,7 @@ namespace RainbowMage.OverlayPlugin.NetworkProcessors
 {
     class LineActorMove : LineBaseCustom<
             Server_MessageHeader_Global, LineActorMove.ActorMove_v655,
+            Server_MessageHeader_TC, LineActorMove.ActorMove_v655,
             Server_MessageHeader_CN, LineActorMove.ActorMove_v655,
             Server_MessageHeader_KR, LineActorMove.ActorMove_v655>
     {

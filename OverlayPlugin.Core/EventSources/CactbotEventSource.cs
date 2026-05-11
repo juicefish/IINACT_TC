@@ -1,4 +1,4 @@
-﻿using Advanced_Combat_Tracker;
+using Advanced_Combat_Tracker;
 using Newtonsoft.Json.Linq;
 using RainbowMage.OverlayPlugin.MemoryProcessors;
 using System;
@@ -231,9 +231,13 @@ public class CactbotEventSource : EventSourceBase
                 this.ffxiv = new FFXIVProcessKo(container);
                 LogInfo("Version: ko");
                 break;
+            case "tc":
+                this.ffxiv = new FFXIVProcessTc(container);
+                LogInfo("Version: tc");
+                break;
             default:
                 this.ffxiv = new FFXIVProcessIntl(container);
-                LogInfo("Version: intl");
+                LogInfo($"Version: intl ({language})");
                 break;
         }
 
