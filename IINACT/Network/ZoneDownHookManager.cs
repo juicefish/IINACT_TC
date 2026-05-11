@@ -14,6 +14,9 @@ namespace IINACT.Network;
 public unsafe class ZoneDownHookManager : IDisposable
 {
 	private const string GenericDownSignature = "E8 ?? ?? ?? ?? 4C 8B 4F 10 8B 47 1C 45";
+    private const string OnPacketRecieveSignatureTC = "48 89 5C 24 20 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 E0 EF FF FF B8 20 11 00 00 E8 AE E6 5C 00 48 2B E0 48 8B 05 AC 59 09 01 48 33 C4 48 89 85 18 10 00 00 45 0F B7 78 02";
+    private const ulong OnPacketRecieveAddressTC = 0x14168BD10;
+    private const ulong DeriveAddressTC = 0x141691010;
     private const string OpcodeKeyTableSignature = "?? ?? ?? 2B C8 ?? 8B ?? 8A ?? ?? ?? ?? 41 81";
     private readonly int[] opcodeKeyTable;
     private readonly byte[] keys = new byte[3];
@@ -46,44 +49,55 @@ public unsafe class ZoneDownHookManager : IDisposable
         }
         else
         {
-            Plugin.Log.Warning("[ZoneDownHookManager] Creating fallback Unscrambler constants dynamically");
-            var onReceivePacketAddress = PacketDispatcher.GetOnReceivePacketAddress();
-            Plugin.Log.Debug($"[ZoneDownHookManager] GetOnReceivePacketAddress: {onReceivePacketAddress:X}");
-            var opcodeKeyTableIns = MultiSigScanner.Scan(onReceivePacketAddress, 0x1000, OpcodeKeyTableSignature);
-            var bytes = new byte[13];
-            Marshal.Copy(opcodeKeyTableIns, bytes, 0, 13);
-            var opcodeKeyTableOffset = BitConverter.ToUInt32(bytes, 9);
-            var opcodeKeyTableAddress = moduleBase + (nint)opcodeKeyTableOffset;
-            var searchRange = 0x1000;
-            var memory = new byte[searchRange];
-            Marshal.Copy(opcodeKeyTableAddress, memory, 0, searchRange);
-            var moduleSize = multiScanner.Module.ModuleMemorySize;
-            var opcodeKeyTableSize = 0;
-            while (!IsModulePointer(memory, opcodeKeyTableSize, moduleBase, moduleSize))
+            // TC 7.1 seems dosen't have OpcodeKeyTable @ OnPacketRecieve Switch content
+            // Struct may fit for Global 7.2
+            Plugin.Log.Warning("[ZoneDownHookManager] Unscrambler7.2 TC");
+            versionConstants = new VersionConstants
             {
-                opcodeKeyTableSize += 4;
-                if (opcodeKeyTableSize > searchRange)
-                    throw new Exception("Opcode key table size is too large");
-            }
-            if (memory[opcodeKeyTableSize - 1] == 0 && memory[opcodeKeyTableSize - 2] == 0 && memory[opcodeKeyTableSize - 3] == 0 && memory[opcodeKeyTableSize - 4] == 0)
-            {
-                Plugin.Log.Debug("Uneven padded length for opcode key table");
-                opcodeKeyTableSize -= 4;
-            }
-            Plugin.Log.Debug(
-                $"[ZoneDownHookManager] opcodeKeyTableOffset {opcodeKeyTableOffset:X}, opcodeKeyTableSize {opcodeKeyTableSize:X}");
-            versionConstants = GetFallbackVersionConstant(opcodeKeyTableOffset, opcodeKeyTableSize);
-            unscrambler = new Unscrambler73();
+                GameVersion = GetRunningGameVersion(),
+                InitZoneOpcode = 0x227,                             //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+                UnknownObfuscationInitOpcode = 0x0,
+                OpcodeKeyTableOffset = 0,
+                OpcodeKeyTableSize = 0,
+                TableOffsets = [0x2162570, 0x21755F0, 0x2179560],
+                TableRadixes = [0xCB, 0x29, 0xE9],
+                TableSizes = [96 * 0xCB, 99 * 0x29, 128 * 0xE9],
+                MidTableOffset = 0x2162350,
+                MidTableSize = 0x44 * 8,
+                DayTableOffset = 0x2196760,
+                DayTableSize = (0xE + 1) * 4,
+                ObfuscatedOpcodes = new Dictionary<string, int>
+                {
+                    { "PlayerSpawn", 0x1C5 },                       //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+                    { "NpcSpawn", 0x27D },                          //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+                    { "NpcSpawn2", 0x1E2 },                         //Does not seem to be sent to the client
+
+                    { "ActionEffect01", 0x1F9 },                    //Effect
+                    { "ActionEffect08", 0x239 },                    //AoeEffect8
+                    { "ActionEffect16", 0x33A },                    //AoeEffect16
+                    { "ActionEffect24", 0xAC },                     //AoeEffect24
+                    { "ActionEffect32", 0x9C },                     //AoeEffect32
+                    { "StatusEffectList", 0x317 },                  //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+                    { "StatusEffectList3", 0x1CC },                 //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+
+                    { "Examine",0x67 },                             //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+                    { "UpdateGearset", 0 },                         //ModelEquip
+                    { "UpdateParty", 0xF5 },
+                    { "ActorControl", 0x191 },                      //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+                    { "ActorCast", 0x23B },                         //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+                    { "ActorControlSelf", 0x03C3 },                 //FFXIVOpcodes/FFXIVOpcodes/Ipcs_tw.cs
+
+                    { "UnknownEffect01", 0 },                       //Does not seem to be sent to the client, EventAction8->EventAction16
+                    { "UnknownEffect16", 0 },                       //Does not seem to be sent to the client, EventAction16->EventAction32
+                    { "ActionEffect02", 0 },                        //Does not seem to be sent to the client, EventFinish64->EventFinish128
+                    { "ActionEffect04", 0 }                         //Does not seem to be sent to the client, EventFinish128->EventFinish255
+                }
+            };
+
+            unscrambler = new Unscrambler72();
             unscrambler.Initialize(versionConstants);
         }
         
-        var rawOpcodeKeyTable = new byte[versionConstants.OpcodeKeyTableSize];
-        opcodeKeyTable = new int[rawOpcodeKeyTable.Length / 4];
-        Marshal.Copy(moduleBase + (nint)versionConstants.OpcodeKeyTableOffset, rawOpcodeKeyTable, 0, rawOpcodeKeyTable.Length);
-        Plugin.Log.Debug("[ZoneDownHookManager] raw opcode key table {@Data} (length: {Length})", rawOpcodeKeyTable, rawOpcodeKeyTable.Length);
-        for (var i = 0; i < rawOpcodeKeyTable.Length; i += 4)
-            opcodeKeyTable[i / 4] = BitConverter.ToInt32(rawOpcodeKeyTable, i);
-
         var rxPtrs = multiScanner.ScanText(GenericDownSignature, 3);
 		zoneDownHook = hooks.HookFromAddress<DownPrototype>(rxPtrs[2], ZoneDownDetour);
 
