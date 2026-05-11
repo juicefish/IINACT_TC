@@ -1,48 +1,90 @@
 ![icon](https://github.com/marzent/IINACT/blob/main/images/icon.ico?raw=true)
 
-# IINACT
+# IINACT_TC
 
-A [Dalamud](https://github.com/goatcorp/Dalamud) plugin to run the [FFXIV_ACT_Plugin](https://github.com/ravahn/FFXIV_ACT_Plugin) in an [ACT](https://advancedcombattracker.com/)-like enviroment with a heavily modified port of [Overlay Plugin](https://github.com/OverlayPlugin/OverlayPlugin) for modern .NET.
+Dalamud repo url : `https://raw.githubusercontent.com/juicefish/IINACT_TC/main/repo.json`
 
-The data source here is only based on [Unscrambler](https://github.com/perchbirdd/Unscrambler) and does not require any extra injection with [Deucalion](https://github.com/ff14wed/deucalion) or network capture with elevated privileges.
+為 [IINACT](https://github.com/marzent/IINACT) 搭配 FFXIV繁中版 的 [FFXIVTCLauncher](https://github.com/cycleapple/XIVTCLauncher/) 使用 Dalamud API 12 進行了一些更動
 
-This will **not** render overlays by itself, use something like [Browsingway](https://github.com/Styr1x/Browsingway), [Next UI](https://github.com/kaminaris/Next-UI), [hudkit](https://github.com/valarnin/hudkit) (Linux only) or [Bunny HUD](https://github.com/marzent/Bunny-HUD) (macOS only) to display Overlays.
+由於本人沒有玩過國際服以及使用ACT、Cactbot相關功能，目前沒有測試完全，有興趣的人可以接手
 
+以下列出搭配測試的項目
 
-## Why
+## 安裝
 
-- ACT is too inconvenient IMHO for just wanting to have the game data parsed and served via a WebSocket server
-- Drastically more efficent than ACT, in part to .NET 7.0, in part to a more sane log line processing (disk I/O is not blocking LogLineEvents and happening on a separate lower priority thread)
-- Due to the above and running fully inside the game process CPU usage will be orders of magnitude (not exaggerating here) lower when running under Wine compared to network-based capture
-- Uses an ultra fast and low latency WebSocket server based on [NetCoreServer](https://github.com/chronoxor/NetCoreServer)
-- Doesn't use legacy technology that hurts Linux and macOS users
-- Follows the Unix philosophy of just doing one thing and doing it well   
+請在Dalamud的第三方插件加入對應 repo url
 
-## Installing 
+Dalamud repo url : `https://raw.githubusercontent.com/juicefish/IINACT_TC/main/repo.json`
 
-> **Warning**  
-> No support will be provided on any Dalamud official support channel. Please use the [Issues](https://github.com/marzent/IINACT/issues) page or [Discord](https://discord.gg/pcexJC8YPG) for any support requests. Do NOT ask for support on the [XIVLauncher & Dalamud Discord](https://discord.gg/holdshift), as support for 3rd-party plugins is not provided there. 
+## 環境
 
-Install instructions can be found [here](https://www.iinact.com/installation/), but are indentical to any other 3rd-party plugin repository.
+Windows 10
 
-## How to build
+[.NET 9.0 Runtime](https://dotnet.microsoft.com/zh-tw/download/dotnet/9.0) 理論上有用 [FFXIVTCLauncher](https://github.com/cycleapple/XIVTCLauncher/) 應該不需要再安裝
 
-Just run 
-```
-git clone --recurse-submodules https://github.com/marzent/IINACT.git
-cd IINACT
-dotnet build
-``` 
-on a Linux, macOS or Windows machine with the [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0). 
+[Browsingway](https://github.com/Styr1x/Browsingway)
+繁中可用，啟用後用/xllog看出錯訊息可查詢需安裝的 .Net 版本，印象中是6
 
-You will need to be able to reference Dalamud as well, meaning having an install of [XL](https://github.com/goatcorp/FFXIVQuickLauncher) or [XOM](https://github.com/marzent/XIV-on-Mac) on Windows and macOS respectively. On Linux `DALAMUD_HOME` needs to be correctly set (for example `$HOME/.xlcore/dalamud/Hooks/dev`).
+[LMeter_TC](https://github.com/juicefish/LMeter_TC) LMeter @ Dalamud API 12 
 
-## FAQ
+| OverlayURI | 測試 | 用途 |
+| :--- | :---: | :--- |
+| Cactbot Configuration | :heavy_check_mark: |  |
+| Cactbot DPS Xephero | :question: |  |
+| Cactbot DPS Rdmty | :question: |  |
+| Cactbot Eureka | :question: |  |
+| Cactbot Fisher | :question: |  |
+| Cactbot Jobs |  :heavy_check_mark:| 職能資訊? |
+| Cactbot OopsyRaidsy | :question: |  |
+| Cactbot PullCounter | :question: |  |
+| Cactbot Radar | :heavy_check_mark: | 野生王方位, 含TTS |
+| Cactbot Raidboss Alerts only | :question: |  |
+| Cactbot Raidboss Combine | :question: |  |
+| Cactbot Raidboss Timeline Only | :question: |  |
+| Cactbot Test | :heavy_check_mark: | 偵錯資訊 |
+| Ember Overlay | :question: |  |
+| Ember SpellTimers | :question: |  |
+| Horizoverlay | :question: |  |
+| Ikegami | :heavy_check_mark: | DPS計數器 |
+| Kagerou | :heavy_check_mark: | DPS計數器 |
+| MopiMopi | :heavy_check_mark: | DPS計數器, 原介面韓文 |
+| NextUI | :question: |  |
+| Skyline | :heavy_check_mark: | DPS計數器 |
 
-**Where are my logs?**
+## 其他修改
+| 路徑 | 修改 |
+| :--- | :--- |
+| Machina\Machina.csproj | .NET 9 |
+| Machina.FFXIV\Machina.FFXIV.csproj | .NET 9 |
+| Machina.FFXIV\Deucalion\DeucalionInjector.cs | 讓ACT使用Region.TC |
+| Machina.FFXIV\Headers\Opcodes\OpcodeManager.cs | Debug message |
+| Machina.FFXIV\Headers\Opcodes\TraditionalChinese.txt | OPCode Update |
 
-- In your Documents folder. For Windows users, `C:\Users\[user]\Documents\IINACT`. For Mac/Linux users, same thing, but relative to your wine prefix.
-
-**Are these logs compatible with FFLogs? Can I use the FFLogs Uploader?**
-
-- Yes! 100% compatible.
+## 參考
+| 名稱 | 簡介 | Url |
+| :--- | :--- | :--- |
+| FFXIVTCLauncher | | https://github.com/cycleapple/XIVTCLauncher/ |
+| FFXIVClientStructs |  | https://github.com/aers/FFXIVClientStructs |
+| | | |
+| FFXIV_ACT_Plugin |  | https://github.com/ravahn/FFXIV_ACT_Plugin |
+| OverlayPlugin | | https://github.com/OverlayPlugin/OverlayPlugin |
+| Cactbot |  | https://github.com/OverlayPlugin/cactbot/ |
+| | | |
+| IINACT | 原版IINACT | https://github.com/marzent/IINACT |
+| Browsingway | 遊戲內瀏覽器 | https://github.com/Styr1x/Browsingway |
+| LMeter | DPS計數器 | https://github.com/lichie567/LMeter |
+| | | |
+| Deucalion | ACT使用的反混淆 | https://github.com/ff14wed/deucalion |
+| Unscrambler | IINACT使用的反混淆 | https://github.com/perchbirdd/Unscrambler |
+| Unscrambler | CN | https://github.com/Latihas/Unscrambler  |
+| | | |
+| EXE Storage |  | https://github.com/extrant/FFXIV.EXE |
+| Link Storage |  | https://karashiiro.github.io/xiv-resources/ |
+| OPCode Storage |  | https://github.com/karashiiro/FFXIVOpcodes |
+| OPCode Storage | 主要是CN的  | https://github.com/zhyupe/ffxiv-opcode-worker/ |
+| | | |
+| XivAlexander |  | https://github.com/Soreepeong/XivAlexander |
+| OPCode Find | 使用XivAlexander尋找OPCode | https://github.com/Soreepeong/XivAlexander/wiki/How-to-find-opcodes |
+| | | |
+| OPCode Finder | Opcode program address | 	https://github.com/moewcorp/FFXIVNetworkOpcodes/ |
+| OPCode Finder | Opcode for switch | https://github.com/nyaoouo/IdaFFxivOpcodes/ |
